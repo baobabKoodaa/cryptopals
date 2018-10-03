@@ -1,6 +1,16 @@
 #include <iostream>
+#include "set1.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    try {
+        std::cout << "Hello, World!" << std::endl;
+        set1_prints();
+    } catch (std::exception& e) {
+        std::cout << "Exception! " << std::endl;
+    } catch (...) {
+        std::cout << "Unknown exception!" << std::endl;
+    }
+
+
     return 0;
 }
