@@ -32,6 +32,27 @@ vector<unsigned char> hex_to_bytes(string hex) {
     return bytes;
 }
 
+char nibble_to_hex_char(int v) {
+    if (v <= 9) return '0'+v;
+    if (v <= 15) return 'a'+v-10;
+    throw std::invalid_argument("Invalid input to nibble_to_hex_char, v=" + std::to_string(v));
+}
+
+string byte_to_hex(int v) {
+    int a = (v & 240) >> 4;
+    int b = (v & 15);
+    string s = "";
+    s += nibble_to_hex_char(a);
+    s += nibble_to_hex_char(b);
+    return s;
+}
+
+string bytes_to_hex(vector<unsigned char> bytes) {
+    string s = "";
+    for (int i=0; i<bytes.size(); i++) s += byte_to_hex(bytes[i]);
+    return s;
+}
+
 char int_to_b64_char(int v) {
     if (v <= 25) return 'A'+v;
     if (v <= 51) return 'a'+v-26;
@@ -69,7 +90,7 @@ vector<char> bytes_to_base64(vector<unsigned char> bytes) {
             } // else no more bytes available, it is as if we had padded with zeros to the right
 
         }
-        cout << v << int_to_b64_char(v) << std::endl;
+        //cout << v << int_to_b64_char(v) << std::endl;
         str.push_back(int_to_b64_char(v));
     }
     return str;
@@ -78,8 +99,39 @@ vector<char> bytes_to_base64(vector<unsigned char> bytes) {
 int set1_prints() {
     string input1 = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
     vector<unsigned char> bytes = hex_to_bytes(input1);
+
+    //test conversion from hex to bytes to hex
+    string input1again = bytes_to_hex(bytes);
+    if (input1 != input1again) {
+        cout << "Problem with hex conversion detected! " << input1again << std::endl;
+    }
+
+    // assignment 1: convert bytes to base64 and print
     vector<char> b64 = bytes_to_base64(bytes);
-    cout << std::string(b64.begin(), b64.end()) << std::endl;
+    string b64str = std::string(b64.begin(), b64.end());
+    cout << b64str << std::endl;
+    if (b64str == "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t") {
+        cout << "Challenge 1 ok" << std::endl;
+    } else {
+        cout << "Error on challenge 1" << std::endl;
+    }
+
+    // assignment 2: xor two hex string inputs
+    input1 = "1c0111001f010100061a024b53535009181c";
+    string input2 = "686974207468652062756c6c277320657965";
+    vector<unsigned char> b1 = hex_to_bytes(input1);
+    vector<unsigned char> b2 = hex_to_bytes(input2);
+    vector<unsigned char> res = {};
+    for (int i=0; i<b1.size(); i++) {
+        res.push_back(b1[i] ^ b2[i]);
+    }
+    cout << bytes_to_hex(res) << std::endl;
+    if (bytes_to_hex(res) == "746865206b696420646f6e277420706c6179") {
+        cout << "Challenge 2 ok" << std::endl;
+    } else {
+        cout << "Error on challenge 2" << std::endl;
+    }
+
     cout << "Set 1 end" << std::endl;
     return 0;
 }
