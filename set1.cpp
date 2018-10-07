@@ -127,7 +127,7 @@ bool sort_by_second(std::pair<vector<unsigned char>, long long> a, std::pair<vec
     return a.second < b.second;
 }
 
-int set1_prints() {
+void challenge1() {
     string input1 = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
     vector<unsigned char> bytes = hex_to_bytes(input1);
 
@@ -146,9 +146,11 @@ int set1_prints() {
     } else {
         cout << "Error on challenge 1" << std::endl;
     }
+}
 
+void challenge2() {
     // challenge 2: xor two hex string inputs
-    input1 = "1c0111001f010100061a024b53535009181c";
+    string input1 = "1c0111001f010100061a024b53535009181c";
     string input2 = "686974207468652062756c6c277320657965";
     vector<unsigned char> b1 = hex_to_bytes(input1);
     vector<unsigned char> b2 = hex_to_bytes(input2);
@@ -162,7 +164,9 @@ int set1_prints() {
     } else {
         cout << "Error on challenge 2" << std::endl;
     }
+}
 
+void challenge3() {
     // challenge 3: single-byte XOR cipher
     string cipher_text_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
     vector<unsigned char> cipher_text_bytes = hex_to_bytes(cipher_text_hex);
@@ -187,6 +191,12 @@ int set1_prints() {
 
     cout << "Challenge 3 plain-text: ";
     print(options[options.size()-1].first);
+}
+
+int set1_prints() {
+    challenge1();
+    challenge2();
+    challenge3();
 
     cout << "Set 1 end" << std::endl;
     return 0;
