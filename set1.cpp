@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "set1.h"
+#include <algorithm>
 
 using std::cout;
 using std::string;
@@ -96,6 +97,36 @@ vector<char> bytes_to_base64(vector<unsigned char> bytes) {
     return str;
 }
 
+vector<unsigned char> xor_against_single_byte(vector<unsigned char> input, unsigned char c) {
+    vector<unsigned char> output = {};
+    for (int i=0; i<input.size(); i++) {
+        output.push_back(input[i] ^ c);
+    }
+    return output;
+}
+
+long long english_score(vector<unsigned char> input) {
+    long long score = 0;
+    std::string common_chars = "ETAOIN SHRDLU etaoin shrdlu";
+    for (unsigned char c : input) {
+        if (c >= ' ' && c <= '}') score += 1;
+        if (common_chars.find(c) != std::string::npos) score += 10;
+    }
+    return score;
+}
+
+void print(vector<unsigned char> chars) {
+    for (unsigned char c : chars) {
+        if (c == '\n' || c == '\r') continue;
+        cout << c;
+    }
+    cout << std::endl;
+}
+
+bool sort_by_second(std::pair<vector<unsigned char>, long long> a, std::pair<vector<unsigned char>, long long> b) {
+    return a.second < b.second;
+}
+
 int set1_prints() {
     string input1 = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
     vector<unsigned char> bytes = hex_to_bytes(input1);
@@ -106,7 +137,7 @@ int set1_prints() {
         cout << "Problem with hex conversion detected! " << input1again << std::endl;
     }
 
-    // assignment 1: convert bytes to base64 and print
+    // challenge 1: convert bytes to base64 and print
     vector<char> b64 = bytes_to_base64(bytes);
     string b64str = std::string(b64.begin(), b64.end());
     cout << b64str << std::endl;
@@ -116,7 +147,7 @@ int set1_prints() {
         cout << "Error on challenge 1" << std::endl;
     }
 
-    // assignment 2: xor two hex string inputs
+    // challenge 2: xor two hex string inputs
     input1 = "1c0111001f010100061a024b53535009181c";
     string input2 = "686974207468652062756c6c277320657965";
     vector<unsigned char> b1 = hex_to_bytes(input1);
@@ -131,6 +162,31 @@ int set1_prints() {
     } else {
         cout << "Error on challenge 2" << std::endl;
     }
+
+    // challenge 3: single-byte XOR cipher
+    string cipher_text_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
+    vector<unsigned char> cipher_text_bytes = hex_to_bytes(cipher_text_hex);
+    cout << "Challenge 3 cipher-text: ";
+    print(cipher_text_bytes);
+    unsigned char i = 0;
+    vector<std::pair<vector<unsigned char>, long long>> options = {};
+    do {
+        vector<unsigned char> plain_text_bytes = xor_against_single_byte(cipher_text_bytes, i);
+        long long score = english_score(plain_text_bytes);
+        std::pair<vector<unsigned char>, long long> pair = std::make_pair(plain_text_bytes, score);
+        options.push_back(pair);
+        i += 1;
+    } while (++i);
+    std::sort(options.begin(), options.end(), sort_by_second);
+
+    // Uncomment this to print everything
+    // for (std::pair<vector<unsigned char>, long long> option : options) {
+    //    cout << option.second << " :: ";
+    //    print(option.first);
+    //}
+
+    cout << "Challenge 3 plain-text: ";
+    print(options[options.size()-1].first);
 
     cout << "Set 1 end" << std::endl;
     return 0;
