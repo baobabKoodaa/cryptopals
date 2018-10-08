@@ -230,11 +230,38 @@ void challenge4() {
     print(std::get<1>(options[options.size()-1]));
 }
 
+void challenge8() {
+    // challenge 8: find which line in 8.txt has been encrypted with ECB
+    int best_count = 0;
+    int ecb_index = 0;
+    int index = 0;
+    string ecb_line = "";
+    std::ifstream infile("../8.txt");
+    std::string line;
+    while (std::getline(infile, line)) {
+        vector<unsigned char> bytes = hex_to_bytes(line);
+        int count[256];
+        for (int i=0; i<256; i++) count[i] = 0;
+        for (int i=0; i<bytes.size(); i++) count[bytes[i]]++;
+        for (int i=0; i<256; i++) {
+            if (count[i] > best_count) {
+                ecb_index = index;
+                best_count = count[i];
+                ecb_line = line;
+            }
+        }
+        index += 1;
+    }
+    cout << "Challenge 4 index for ECB ciphertext: " << ecb_index << std::endl;
+    //cout << ecb_line << std::endl;
+}
+
 int set1_prints() {
     challenge1();
     challenge2();
     challenge3("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
     challenge4();
+    challenge8();
     cout << "Set 1 end" << std::endl;
     return 0;
 }
