@@ -255,6 +255,32 @@ void challenge5() {
     }
 }
 
+long hamming(string t1, string t2) {
+    if (t1.size() != t2.size()) {
+        throw std::invalid_argument("Hamming distance not implemented for different sized strings");
+    }
+    long count = 0;
+    for (int i=0; i<t1.size(); i++) {
+        unsigned char a = t1[i];
+        unsigned char b = t2[i];
+        for (unsigned char mask=1; mask!=0; mask<<=1) {
+            if ((mask&a)!=(mask&b)) count++;
+        }
+    }
+    return count;
+}
+
+void challenge6() {
+    // first verify that hamming distance works correctly
+    string t1 = "this is a test";
+    string t2 = "wokka wokka!!!";
+    if (hamming(t1, t2) != 37) {
+        cout << "Problem with Hamming distance " << hamming(t1,t2) << std::endl;
+    }
+
+
+}
+
 void challenge8() {
     // challenge 8: find which line in 8.txt has been encrypted with ECB
     int best_count = 0;
@@ -287,6 +313,7 @@ int set1_prints() {
     challenge3("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
     challenge4();
     challenge5();
+    challenge6();
     challenge8();
     cout << "Set 1 end" << std::endl;
     return 0;
