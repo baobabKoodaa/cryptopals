@@ -103,12 +103,22 @@ vector<char> bytes_to_base64(vector<unsigned char> bytes) {
     return str;
 }
 
-vector<unsigned char> xor_against_single_byte(vector<unsigned char> input, unsigned char c) {
+vector<unsigned char> repeating_key_xor(vector<unsigned char> input, vector<unsigned char> key) {
     vector<unsigned char> output = {};
+    int j=0;
     for (int i=0; i<input.size(); i++) {
-        output.push_back(input[i] ^ c);
+        output.push_back(input[i] ^ key[j]);
+        j += 1;
+        j %= key.size();
     }
     return output;
+}
+
+string repeating_key_xor(string input, string key) {
+    vector<unsigned char> input_vec(input.begin(), input.end());
+    vector<unsigned char> key_vec(key.begin(), key.end());
+    vector<unsigned char> xorred_bytes = repeating_key_xor(input_vec, key_vec);
+    return bytes_to_hex(xorred_bytes);
 }
 
 long long english_score(vector<unsigned char> input) {
@@ -181,7 +191,8 @@ void challenge3(string cipher_text_hex) {
     unsigned char i = 0;
     vector<std::pair<vector<unsigned char>, long long>> options = {};
     do {
-        vector<unsigned char> plain_text_bytes = xor_against_single_byte(cipher_text_bytes, i);
+        vector<unsigned char> key = { i };
+        vector<unsigned char> plain_text_bytes = repeating_key_xor(cipher_text_bytes, key);
         long long score = english_score(plain_text_bytes);
         std::pair<vector<unsigned char>, long long> pair = std::make_pair(plain_text_bytes, score);
         options.push_back(pair);
@@ -218,9 +229,10 @@ void challenge4() {
     for (std::pair<vector<unsigned char>, int> pair : cipher_texts) {
         unsigned char i = 0;
         do {
+            vector<unsigned char> key = { i };
             vector<unsigned char> cipher_text = pair.first;
             int row = pair.second;
-            vector<unsigned char> plain_text_bytes = xor_against_single_byte(cipher_text, i);
+            vector<unsigned char> plain_text_bytes = repeating_key_xor(cipher_text, key);
             long long score = english_score(plain_text_bytes);
             std::tuple<long long, vector<unsigned char>, int> triplet = std::make_tuple(score, plain_text_bytes, row);
             options.push_back(triplet);
@@ -230,6 +242,17 @@ void challenge4() {
 
     cout << "Challenge 4 plain-text: ";
     print(std::get<1>(options[options.size()-1]));
+}
+
+void challenge5() {
+    string plain = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
+    string key = "ICE";
+    string cipher = repeating_key_xor(plain, key);
+    if (cipher == "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f") {
+        cout << "Challenge 5 ok" << std::endl;
+    } else {
+        cout << "Challenge 5 error" << std::endl;
+    }
 }
 
 void challenge8() {
@@ -263,6 +286,7 @@ int set1_prints() {
     challenge2();
     challenge3("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
     challenge4();
+    challenge5();
     challenge8();
     cout << "Set 1 end" << std::endl;
     return 0;
