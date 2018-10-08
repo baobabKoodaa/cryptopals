@@ -7,6 +7,8 @@
 #include <sstream>
 #include <string>
 #include <fstream>
+#include <cstring>
+#include <unordered_map>
 
 using std::cout;
 using std::string;
@@ -236,24 +238,24 @@ void challenge8() {
     int ecb_index = 0;
     int index = 0;
     string ecb_line = "";
-    std::ifstream infile("../8.txt");
+
+    std::ifstream f("../8.txt");
     std::string line;
-    while (std::getline(infile, line)) {
-        vector<unsigned char> bytes = hex_to_bytes(line);
-        int count[256];
-        for (int i=0; i<256; i++) count[i] = 0;
-        for (int i=0; i<bytes.size(); i++) count[bytes[i]]++;
-        for (int i=0; i<256; i++) {
-            if (count[i] > best_count) {
+    while (std::getline(f, line)) {
+        std::unordered_map<string, int> map;
+        for (int i=0; i<line.length(); i+=32) {
+            string block = line.substr(i, 32);
+            map[block]++;
+            if (map[block] > best_count) {
                 ecb_index = index;
-                best_count = count[i];
+                best_count = map[block];
                 ecb_line = line;
             }
         }
         index += 1;
     }
-    cout << "Challenge 4 index for ECB ciphertext: " << ecb_index << std::endl;
-    //cout << ecb_line << std::endl;
+
+    cout << "Challenge 8 index for ECB ciphertext: " << ecb_index << std::endl;
 }
 
 int set1_prints() {
