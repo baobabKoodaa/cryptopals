@@ -3,6 +3,10 @@
 #include <vector>
 #include "set1.h"
 #include <algorithm>
+#include <tuple>
+#include <sstream>
+#include <string>
+#include <fstream>
 
 using std::cout;
 using std::string;
@@ -109,8 +113,9 @@ long long english_score(vector<unsigned char> input) {
     long long score = 0;
     std::string common_chars = "ETAOIN SHRDLU etaoin shrdlu";
     for (unsigned char c : input) {
-        if (c >= ' ' && c <= '}') score += 1;
-        if (common_chars.find(c) != std::string::npos) score += 10;
+        if (common_chars.find(c) != std::string::npos) score += 10000;
+        else if (c >= ' ' && c <= '}') score += 1;
+        else score -= 10000;
     }
     return score;
 }
@@ -166,9 +171,8 @@ void challenge2() {
     }
 }
 
-void challenge3() {
+void challenge3(string cipher_text_hex) {
     // challenge 3: single-byte XOR cipher
-    string cipher_text_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
     vector<unsigned char> cipher_text_bytes = hex_to_bytes(cipher_text_hex);
     cout << "Challenge 3 cipher-text: ";
     print(cipher_text_bytes);
@@ -179,7 +183,6 @@ void challenge3() {
         long long score = english_score(plain_text_bytes);
         std::pair<vector<unsigned char>, long long> pair = std::make_pair(plain_text_bytes, score);
         options.push_back(pair);
-        i += 1;
     } while (++i);
     std::sort(options.begin(), options.end(), sort_by_second);
 
@@ -193,11 +196,45 @@ void challenge3() {
     print(options[options.size()-1].first);
 }
 
+void challenge4() {
+    // challenge 4: find which line in 4.txt has been encrypted with single-character xor
+    vector<std::pair<vector<unsigned char>, int>> cipher_texts = {};
+
+    // read cipher_texts from file
+    int row = 0;
+    std::ifstream infile("../4.txt");
+    std::string line;
+    while (std::getline(infile, line)) {
+        vector<unsigned char> cipher_text_bytes = hex_to_bytes(line);
+        std::pair<vector<unsigned char>, int> pair = std::make_pair(cipher_text_bytes, row);
+        cipher_texts.push_back(pair);
+        row += 1;
+    }
+
+    // for each cipher_text try each possible byte to xor with, score english
+    vector<std::tuple<long long, vector<unsigned char>, int>> options = {};
+    for (std::pair<vector<unsigned char>, int> pair : cipher_texts) {
+        unsigned char i = 0;
+        do {
+            vector<unsigned char> cipher_text = pair.first;
+            int row = pair.second;
+            vector<unsigned char> plain_text_bytes = xor_against_single_byte(cipher_text, i);
+            long long score = english_score(plain_text_bytes);
+            std::tuple<long long, vector<unsigned char>, int> triplet = std::make_tuple(score, plain_text_bytes, row);
+            options.push_back(triplet);
+        } while (++i);
+    }
+    std::sort(options.begin(), options.end());
+
+    cout << "Challenge 4 plain-text: ";
+    print(std::get<1>(options[options.size()-1]));
+}
+
 int set1_prints() {
     challenge1();
     challenge2();
-    challenge3();
-
+    challenge3("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
+    challenge4();
     cout << "Set 1 end" << std::endl;
     return 0;
 }
