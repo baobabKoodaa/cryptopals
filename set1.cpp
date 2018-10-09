@@ -39,6 +39,12 @@ vector<unsigned char> hex_to_bytes(string hex) {
     return bytes;
 }
 
+vector<unsigned char> str_to_bytes(string str) {
+    vector<unsigned char> bytes = {};
+    for (int i=0; i<str.size(); i++) bytes.push_back(str[i]);
+    return bytes;
+}
+
 char nibble_to_hex_char(int v) {
     if (v <= 9) return '0'+v;
     if (v <= 15) return 'a'+v-10;
@@ -255,9 +261,9 @@ void challenge5() {
     }
 }
 
-long hamming(string t1, string t2) {
+long hamming(vector<unsigned char> t1, vector<unsigned char> t2) {
     if (t1.size() != t2.size()) {
-        throw std::invalid_argument("Hamming distance not implemented for different sized strings");
+        throw std::invalid_argument("Hamming distance not implemented for different sized vectors");
     }
     long count = 0;
     for (int i=0; i<t1.size(); i++) {
@@ -274,11 +280,17 @@ void challenge6() {
     // first verify that hamming distance works correctly
     string t1 = "this is a test";
     string t2 = "wokka wokka!!!";
-    if (hamming(t1, t2) != 37) {
-        cout << "Problem with Hamming distance " << hamming(t1,t2) << std::endl;
+    long expected_hamming = 37;
+    long actual_hamming = hamming(str_to_bytes(t1), str_to_bytes(t2));
+    if (expected_hamming != actual_hamming) {
+        cout << "Problem with Hamming distance " << actual_hamming << std::endl;
     }
 
+    // TODO load file
+    // TODO base64 to bytes
 
+    for (int key_size=1; key_size <=40; key_size++) {
+    }
 }
 
 void challenge8() {
