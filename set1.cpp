@@ -228,28 +228,35 @@ void challenge2() {
     }
 }
 
-void challenge3(string cipher_text_hex) {
-    // challenge 3: single-byte XOR cipher
-    vector<unsigned char> cipher_text_bytes = hex_to_bytes(cipher_text_hex);
+vector<unsigned char> break_single_character_xor(vector<unsigned char> cipher_text_bytes) {
     unsigned char i = 0;
-    vector<std::pair<vector<unsigned char>, long long>> options = {};
+    vector<std::tuple<long long, vector<unsigned char>, vector<unsigned char>>> options = {};
     do {
         vector<unsigned char> key = { i };
         vector<unsigned char> plain_text_bytes = repeating_key_xor(cipher_text_bytes, key);
         long long score = english_score(plain_text_bytes);
-        std::pair<vector<unsigned char>, long long> pair = std::make_pair(plain_text_bytes, score);
-        options.push_back(pair);
+        std::tuple<long long, vector<unsigned char>, vector<unsigned char>> tuple = std::make_tuple(score, key, plain_text_bytes);
+        options.push_back(tuple);
     } while (++i);
-    std::sort(options.begin(), options.end(), sort_by_second);
+    std::sort(options.begin(), options.end());
 
     // Uncomment this to print everything
-    // for (std::pair<vector<unsigned char>, long long> option : options) {
-    //    cout << option.second << " :: ";
-    //    print(option.first);
+    //for (std::tuple<long long, vector<unsigned char>, vector<unsigned char>> option : options) {
+    //    cout << std::get<0>(option) << " :: ";
+    //    print(std::get<2>(option));
     //}
 
+    return std::get<1>(options[options.size()-1]);
+}
+
+void challenge3(string cipher_text_hex) {
+    // challenge 3: single-byte XOR cipher
+    vector<unsigned char> cipher_text_bytes = hex_to_bytes(cipher_text_hex);
+    vector<unsigned char> recovered_key = break_single_character_xor(cipher_text_bytes);
+    vector<unsigned char> recovered_plain_text = repeating_key_xor(cipher_text_bytes, recovered_key);
+
     cout << "Challenge 3 plain-text: ";
-    print(options[options.size()-1].first);
+    print(recovered_plain_text);
 }
 
 void challenge4() {
@@ -342,8 +349,38 @@ void challenge6() {
         cout << std::string(b64again.begin(), b64again.end()) << std::endl;
     }
 
+    // Use hamming distance to discover probable key size
     for (int key_size=1; key_size <=40; key_size++) {
+        vector<unsigned char> block1 = {};
+        vector<unsigned char> block2 = {};
+        for (int i = 0; i < key_size; i++) {
+            block1.push_back(bytes[i]);
+            block2.push_back(bytes[key_size + i]);
+        }
+        double ed = hamming(block1, block2) * 1.0 / key_size;
+        //cout << "Key_size " << key_size << " hamming " << ed << std::endl;
     }
+
+
+    // Recover the key 1 character at a time
+    vector<unsigned char> recovered_key = {};
+    int key_size = 29; // Found this by brute forcing all key sizes. Surprisingly its hamming distance wasn't that low?
+    for (int i=0; i<key_size; i++) {
+        // First, create transposed blocks (e.g. first block is first byte of every key_sized block)
+        vector<unsigned char> transposed = {};
+        for (int j=i; j<bytes.size(); j+=key_size) {
+            transposed.push_back(bytes[j]);
+        }
+        // Next recover the character that was used to xor all the characters in this transposed block
+        vector<unsigned char> recovered_character = break_single_character_xor(transposed);
+        // Reconstruct the key by adding 1 character of key_size at a time
+        for (unsigned char c : recovered_character) recovered_key.push_back(c);
+    }
+
+    // Decrypt cipher_text using the recovered key
+    vector<unsigned char> plain_text = repeating_key_xor(bytes, recovered_key);
+    cout << "Challenge 6 plain-text: ";
+    print(plain_text);
 }
 
 void challenge8() {
