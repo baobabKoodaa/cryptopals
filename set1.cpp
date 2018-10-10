@@ -75,10 +75,20 @@ char int_to_b64_char(int v) {
     throw std::invalid_argument("More than 6 bits given to int_to_b64_char!");
 }
 
-vector<char> bytes_to_base64(vector<unsigned char> bytes) {
-    vector<char> str = {};
-    int bits = 8*bytes.size();
-    for (int i=0; i<bits; i+=6) {
+int b64_char_to_int(unsigned char c) {
+    if (c == '=') return -1; // padding
+    if (c == '/') return 63;
+    if (c == '+') return 62;
+    if (c >= 'A' && c <= 'Z') return c-'A';
+    if (c >= 'a' && c <= 'z') return c-'a'+26;
+    if (c >= '0' && c <= '9') return c-'0'+52;
+    throw std::invalid_argument("Invalid char given to b64_char_to_int");
+}
+
+vector<unsigned char> bytes_to_base64(vector<unsigned char> bytes) {
+    vector<unsigned char> str = {};
+    long bits = 8*bytes.size();
+    for (long i=0; i<bits; i+=6) {
         int start_byte = bytes[i/8];
         int index_for_start_bit = i%8;
         int v = start_byte;
@@ -106,7 +116,38 @@ vector<char> bytes_to_base64(vector<unsigned char> bytes) {
         //cout << v << int_to_b64_char(v) << std::endl;
         str.push_back(int_to_b64_char(v));
     }
+    // padding in case bytes size not divisible by 3
+    if (bytes.size() % 3 >= 1) str.push_back('=');
+    if (bytes.size() % 3 == 1) str.push_back('=');
     return str;
+}
+
+vector<unsigned char> base64_to_bytes(vector<unsigned char> b64) {
+    vector<unsigned char> bytes = {};
+    long bits = 6*b64.size();
+    for (long i=0; i<bits; i+=8) {
+        unsigned char first_char = b64[i/6];
+        unsigned char second_char = b64[i/6+1];
+        if (second_char == '=') break; // padding
+        int first = b64_char_to_int(first_char);
+        int second = b64_char_to_int(second_char);
+        int index_for_start_bit = i%6;
+        int v = first;
+        if (index_for_start_bit == 0) {
+            v <<= 2;
+            v ^= (second >> 4);
+        }
+        if (index_for_start_bit == 2) {
+            v <<= 4;
+            v ^= (second >> 2);
+        }
+        if (index_for_start_bit == 4) {
+            v <<= 6;
+            v ^= second;
+        }
+        bytes.push_back(v);
+    }
+    return bytes;
 }
 
 vector<unsigned char> repeating_key_xor(vector<unsigned char> input, vector<unsigned char> key) {
@@ -161,9 +202,8 @@ void challenge1() {
     }
 
     // challenge 1: convert bytes to base64 and print
-    vector<char> b64 = bytes_to_base64(bytes);
+    vector<unsigned char> b64 = bytes_to_base64(bytes);
     string b64str = std::string(b64.begin(), b64.end());
-    cout << b64str << std::endl;
     if (b64str == "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t") {
         cout << "Challenge 1 ok" << std::endl;
     } else {
@@ -181,7 +221,6 @@ void challenge2() {
     for (int i=0; i<b1.size(); i++) {
         res.push_back(b1[i] ^ b2[i]);
     }
-    cout << bytes_to_hex(res) << std::endl;
     if (bytes_to_hex(res) == "746865206b696420646f6e277420706c6179") {
         cout << "Challenge 2 ok" << std::endl;
     } else {
@@ -192,8 +231,6 @@ void challenge2() {
 void challenge3(string cipher_text_hex) {
     // challenge 3: single-byte XOR cipher
     vector<unsigned char> cipher_text_bytes = hex_to_bytes(cipher_text_hex);
-    cout << "Challenge 3 cipher-text: ";
-    print(cipher_text_bytes);
     unsigned char i = 0;
     vector<std::pair<vector<unsigned char>, long long>> options = {};
     do {
@@ -286,8 +323,24 @@ void challenge6() {
         cout << "Problem with Hamming distance " << actual_hamming << std::endl;
     }
 
-    // TODO load file
-    // TODO base64 to bytes
+    // Read Base64-encoded ciphertext file
+    vector<unsigned char> b64 = {};
+    std::ifstream f("../6.txt");
+    std::string line;
+    while (std::getline(f, line)) {
+        for (unsigned char c : line) {
+            b64.push_back(c);
+        }
+    }
+
+    // Test that b64->bytes->b64 conversion works
+    vector<unsigned char> bytes = base64_to_bytes(b64);
+    vector<unsigned char> b64again = bytes_to_base64(bytes);
+    if (b64 != b64again) {
+        cout << "Error with base64 conversion!" << std::endl;
+        cout << std::string(b64.begin(), b64.end()) << std::endl;
+        cout << std::string(b64again.begin(), b64again.end()) << std::endl;
+    }
 
     for (int key_size=1; key_size <=40; key_size++) {
     }
