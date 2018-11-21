@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include "set1.h"
@@ -265,7 +266,7 @@ void challenge4() {
 
     // read cipher_texts from file
     int row = 0;
-    std::ifstream infile("../4.txt");
+    std::ifstream infile("../inputs/4.txt");
     std::string line;
     while (std::getline(infile, line)) {
         vector<unsigned char> cipher_text_bytes = hex_to_bytes(line);
@@ -332,7 +333,7 @@ void challenge6() {
 
     // Read Base64-encoded ciphertext file
     vector<unsigned char> b64 = {};
-    std::ifstream f("../6.txt");
+    std::ifstream f("../inputs/6.txt");
     std::string line;
     while (std::getline(f, line)) {
         for (unsigned char c : line) {
@@ -383,6 +384,64 @@ void challenge6() {
     print(plain_text);
 }
 
+vector<unsigned char> aes_decrypt(vector<unsigned char> cipher_block, vector<unsigned char> key_bytes) {
+    //KeyExpansion
+    //AddRoundKey
+    for (int round=10; round>0; round--) {
+        //InvShiftRows(state)
+        //InvSubBytes(state)
+        //AddRoundKey(round, state, roundKey)
+        //InvMixColumns(state)
+    }
+
+    int round = 0;
+    //invShiftRows(state)
+    //InvSubBytes(state)
+    //AddRoundKey(round, state, roundKey)
+
+    return cipher_block;
+}
+
+// split cipher_bytes into 128-bit blocks, decrypt each byte with key using AES with 128-bit key
+vector<unsigned char> aes_ecb_decrypt(vector<unsigned char> cipher_bytes, vector<unsigned char> key_bytes) {
+    int BLOCK_SIZE = 16;
+    vector<unsigned char> plain_bytes = {};
+    for (int i=0; i<cipher_bytes.size(); i+=BLOCK_SIZE) {
+
+        // create block
+        vector<unsigned char> cipher_block = {};
+        for (int j=i; j<i+BLOCK_SIZE; j++) {
+            cipher_block.push_back(cipher_bytes[j]);
+        }
+
+        // decrypt block
+        vector<unsigned char> plain_block = aes_decrypt(cipher_block, key_bytes);
+
+        // append to plain_bytes
+        for (int i=0; i<plain_block.size(); i++) {
+            plain_bytes.push_back(plain_block[i]);
+        }
+    }
+    return plain_bytes;
+}
+
+void challenge7() {
+    // Read Base64-encoded ciphertext file
+    vector<unsigned char> b64 = {};
+    std::ifstream f("../inputs/7.txt");
+    std::string line;
+    while (std::getline(f, line)) {
+        for (unsigned char c : line) {
+            b64.push_back(c);
+        }
+    }
+    vector<unsigned char> cipher_bytes = base64_to_bytes(b64);
+    vector<unsigned char> key_bytes = str_to_bytes("YELLOW SUBMARINE");
+    vector<unsigned char> plain_bytes = aes_ecb_decrypt(cipher_bytes, key_bytes);
+    print(cipher_bytes);
+    print(plain_bytes);
+}
+
 void challenge8() {
     // challenge 8: find which line in 8.txt has been encrypted with ECB
     int best_count = 0;
@@ -390,7 +449,7 @@ void challenge8() {
     int index = 0;
     string ecb_line = "";
 
-    std::ifstream f("../8.txt");
+    std::ifstream f("../inputs/8.txt");
     std::string line;
     while (std::getline(f, line)) {
         std::unordered_map<string, int> map;
@@ -416,6 +475,7 @@ int set1_prints() {
     challenge4();
     challenge5();
     challenge6();
+    challenge7();
     challenge8();
     cout << "Set 1 end" << std::endl;
     return 0;
