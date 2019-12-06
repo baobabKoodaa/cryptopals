@@ -10,6 +10,9 @@
 #include <fstream>
 #include <cstring>
 #include <unordered_map>
+#include "aes.hpp"
+
+#define ECB 1
 
 using std::cout;
 using std::string;
@@ -384,42 +387,31 @@ void challenge6() {
     print(plain_text);
 }
 
-vector<unsigned char> aes_decrypt(vector<unsigned char> cipher_block, vector<unsigned char> key_bytes) {
-    //KeyExpansion
-    //AddRoundKey
-    for (int round=10; round>0; round--) {
-        //InvShiftRows(state)
-        //InvSubBytes(state)
-        //AddRoundKey(round, state, roundKey)
-        //InvMixColumns(state)
-    }
-
-    int round = 0;
-    //invShiftRows(state)
-    //InvSubBytes(state)
-    //AddRoundKey(round, state, roundKey)
-
-    return cipher_block;
-}
-
 // split cipher_bytes into 128-bit blocks, decrypt each byte with key using AES with 128-bit key
 vector<unsigned char> aes_ecb_decrypt(vector<unsigned char> cipher_bytes, vector<unsigned char> key_bytes) {
     int BLOCK_SIZE = 16;
     vector<unsigned char> plain_bytes = {};
+
+    static_assert(std::is_same<unsigned char, uint8_t>::value, "uint8_t is not unsigned char");
+    uint8_t *key = key_bytes.data();
+    struct AES_ctx ctx;
+    AES_init_ctx(&ctx, key);
+
     for (int i=0; i<cipher_bytes.size(); i+=BLOCK_SIZE) {
 
         // create block
-        vector<unsigned char> cipher_block = {};
+        vector<unsigned char> block = {};
         for (int j=i; j<i+BLOCK_SIZE; j++) {
-            cipher_block.push_back(cipher_bytes[j]);
+            block.push_back(cipher_bytes[j]);
         }
 
         // decrypt block
-        vector<unsigned char> plain_block = aes_decrypt(cipher_block, key_bytes);
+        uint8_t *in = block.data();
+        AES_ECB_decrypt(&ctx, in);
 
         // append to plain_bytes
-        for (int i=0; i<plain_block.size(); i++) {
-            plain_bytes.push_back(plain_block[i]);
+        for (int i=0; i<block.size(); i++) {
+            plain_bytes.push_back(block[i]);
         }
     }
     return plain_bytes;
@@ -437,9 +429,10 @@ void challenge7() {
     }
     vector<unsigned char> cipher_bytes = base64_to_bytes(b64);
     vector<unsigned char> key_bytes = str_to_bytes("YELLOW SUBMARINE");
-    vector<unsigned char> plain_bytes = aes_ecb_decrypt(cipher_bytes, key_bytes);
-    print(cipher_bytes);
-    print(plain_bytes);
+    vector<unsigned char> plain_text = aes_ecb_decrypt(cipher_bytes, key_bytes);
+
+    cout << "Challenge 7 plain-text: ";
+    print(plain_text); // cout << (char*) in << std::endl;
 }
 
 void challenge8() {
